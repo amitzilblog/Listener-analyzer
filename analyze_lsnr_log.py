@@ -46,9 +46,10 @@ for line in lsnrf:
 				line_datef = datetime.strptime(line_date,"%d-%b-%Y")
 				line_connectdata = line.split("*")[1]
 				line_address = line.split("*")[1]
-				data_search = re.search(r'PROGRAM=.[^\)]*', line_connectdata, re.M|re.I)
+				data_search = re.search(r'PROGRAM=[^\)]*', line_connectdata, re.M|re.I)
 				if data_search is not None:
 						line_prog = data_search.group().split("=")[1].split("\\")[-1]
+                                                if line_prog == "" : line_prog = "*UNSPECIFIED*"
 						if line_prog != "null":
 								try:
 										dict_program[line_datef,line_prog] += 1
