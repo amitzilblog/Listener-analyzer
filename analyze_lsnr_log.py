@@ -1,27 +1,42 @@
 #!/usr/bin/python
 
+'''
+A script to analyze the Oracle listener log
+'''
+
 import re
 import os
 import os.path
 from datetime import datetime
+from optparse import OptionParser
 
-# get and open the listener log
-lsnr_stat = os.popen("lsnrctl status").read().rstrip()
-lsnr_log_line_search = re.search(r'Listener Log File.*$', lsnr_stat, re.M|re.I)
-if lsnr_log_line_search is None:
-	# can't find 'Listener Log File'
-	print
-	print "Cannot find 'Listener Log File' entry in 'lsnrctl status' output"
-	print "'lsnrctl status' output is:"
-	print
-	print lsnr_stat
-	exit(1)
+# process command line options
+parser = OptionParser(usage="usage: %%prog\n%s" % __doc__)
+parser.add_option("-f", "--file", dest="filename",
+						default = None,
+						help = "Name of the listener logfile. When specified, we won't attempt to query the running listener process.")
+
+(options, args) = parser.parse_args()
+lsnr_log_file = options.filename
+
+if lsnr_log_file is None :
+	# get the listener log, if not specified as a command line argument
+	lsnr_stat = os.popen("lsnrctl status").read().rstrip()
+	lsnr_log_line_search = re.search(r'Listener Log File.*$', lsnr_stat, re.M|re.I)
+	if lsnr_log_line_search is None:
+		# can't find 'Listener Log File'
+		print
+		print "Cannot find 'Listener Log File' entry in 'lsnrctl status' output"
+		print "'lsnrctl status' output is:"
+		print
+		print lsnr_stat
+		exit(1)
 	
-lsnr_log_line = lsnr_log_line_search.group()
-lsnr_log_file = re.sub(r'Listener Log File *','',lsnr_log_line)
-if re.search(r'\.xml$', lsnr_log_file, re.M|re.I):
-	# file is xml, replace the "alert" with "trace" and the "log.xml" with "listener.log"
-	lsnr_log_file = lsnr_log_file.replace('log.xml','listener.log').replace("alert","trace")
+	lsnr_log_line = lsnr_log_line_search.group()
+	lsnr_log_file = re.sub(r'Listener Log File *','',lsnr_log_line)
+	if re.search(r'\.xml$', lsnr_log_file, re.M|re.I):
+		# file is xml, replace the "alert" with "trace" and the "log.xml" with "listener.log"
+		lsnr_log_file = lsnr_log_file.replace('log.xml','listener.log').replace("alert","trace")
 
 if not os.path.isfile(lsnr_log_file):
 	print
